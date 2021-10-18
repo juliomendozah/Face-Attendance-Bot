@@ -10,7 +10,7 @@ import os
 
 url_webex = "https://webexapis.com/v1/messages"
 WEBEX_ACCESS_TOKEN = "YWIyMmExZjgtNTYxYi00Yzk4LTljYmUtODA0MjYzNWQ0N2U4MzkyY2M0NzAtMjU1_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
-# roomId="Y2lzY29zcGFyazovL3VzL1JPT00vNGZmMGQwMDAtZWJmYy0xMWViLWI0OWUtOGRhMjlkNWZiNDJi"#Group Space
+# roomId="Y2lzY29zcGFyazovL3VzL1JPT00vNDg1MjA0YjAtMmUwZC0xMWVjLWFiN2QtYzE2YmYyY2I1Y2U4"#Group Space
 roomId = "Y2lzY29zcGFyazovL3VzL1JPT00vMWZhMTI1MTAtMjUzZC0xMWVjLTk1YWEtMDlmNDQwMjE3Zjhi"  # Direct Space
 
 meraki_api_key = "0d7a8b4276fb04606fe0659a37e52dbba345e805"

@@ -133,7 +133,7 @@ def send_webex_message(person, photo, use_mask=False):
     else:
         msg = person + " 'd just arrived! That person isn't using a mask."
 
-    message_photo = MultipartEncoder({'roomId': roomId,
+    message_photo = MultipartEncoder({'roomId': people["RoomID"][person],
                                 "markdown": msg,
                                 'files': (photo, open(photo, 'rb'),
                                 'image/png')})
