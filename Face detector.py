@@ -1,4 +1,7 @@
 # venv36\scripts\activate
+#References:
+#-https://towardsdatascience.com/the-ultimate-guide-to-emotion-recognition-from-facial-expressions-using-python-64e58d4324ff
+#
 import face_recognition
 import cv2
 import numpy as np
@@ -8,6 +11,9 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 import time
 import os
 import pandas as pd
+from deepface import DeepFace
+
+faceCascade=cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 url_webex = "https://webexapis.com/v1/messages"
 WEBEX_ACCESS_TOKEN = "YWIyMmExZjgtNTYxYi00Yzk4LTljYmUtODA0MjYzNWQ0N2U4MzkyY2M0NzAtMjU1_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
@@ -179,7 +185,9 @@ if __name__ == "__main__":
     while True:
         # Grab a single frame of video
         ret, frame = video_capture.read()
-
+        result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = faceCascade.detectMultiScale(gray, 1.1, 4)
         # Resize frame of video to 1/4 size for faster face recognition processing
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
 
@@ -227,13 +235,16 @@ if __name__ == "__main__":
             # Draw a label with a name below the face
             cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+            cv2.putText(frame, result['dominant_emotion'], (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1,cv2.LINE_4,False)
+            cv2.putText(frame, name, (left + 6, top - 6), font, 1.0, (255, 255, 255), 1,cv2.LINE_4,False)
 
             use_mask = False
 
             if "_m" in name:
                 use_mask = True
                 name = name.replace('_m', '')
+            if "_a" in name:
+                name = name.replace('_a', '')
 
             if name not in visitors:
                 if name != "Unknown":

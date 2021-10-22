@@ -7,11 +7,14 @@ import json
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 import time
 import os
+from deepface import DeepFace
+
+faceCascade=cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 url_webex = "https://webexapis.com/v1/messages"
 WEBEX_ACCESS_TOKEN = "YWIyMmExZjgtNTYxYi00Yzk4LTljYmUtODA0MjYzNWQ0N2U4MzkyY2M0NzAtMjU1_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
-# roomId="Y2lzY29zcGFyazovL3VzL1JPT00vNDg1MjA0YjAtMmUwZC0xMWVjLWFiN2QtYzE2YmYyY2I1Y2U4"#Group Space
-roomId = "Y2lzY29zcGFyazovL3VzL1JPT00vMWZhMTI1MTAtMjUzZC0xMWVjLTk1YWEtMDlmNDQwMjE3Zjhi"  # Direct Space
+roomId="Y2lzY29zcGFyazovL3VzL1JPT00vNDg1MjA0YjAtMmUwZC0xMWVjLWFiN2QtYzE2YmYyY2I1Y2U4"#Group Space
+#roomId = "Y2lzY29zcGFyazovL3VzL1JPT00vMWZhMTI1MTAtMjUzZC0xMWVjLTk1YWEtMDlmNDQwMjE3Zjhi"  # Direct Space
 
 meraki_api_key = "0d7a8b4276fb04606fe0659a37e52dbba345e805"
 cam_serial = "Q2FV-NX7G-MNB2"
@@ -73,6 +76,9 @@ if __name__ == "__main__":
     while True:
         # Grab a single frame of video
         ret, frame = video_capture.read()
+        result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = faceCascade.detectMultiScale(gray, 1.1, 4)
 
         # Resize frame of video to 1/4 size for faster face recognition processing
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
@@ -121,7 +127,9 @@ if __name__ == "__main__":
             # Draw a label with a name below the face
             cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+            cv2.putText(frame, result['dominant_emotion'], (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1,
+                        cv2.LINE_4, False)
+            cv2.putText(frame, name, (left + 6, top - 6), font, 1.0, (255, 255, 255), 1, cv2.LINE_4, False)
 
             use_mask = False
             if name != "Unknown":
