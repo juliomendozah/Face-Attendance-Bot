@@ -18,6 +18,116 @@ roomId="Y2lzY29zcGFyazovL3VzL1JPT00vNDg1MjA0YjAtMmUwZC0xMWVjLWFiN2QtYzE2YmYyY2I1
 
 meraki_api_key = "0d7a8b4276fb04606fe0659a37e52dbba345e805"
 cam_serial = "Q2FV-NX7G-MNB2"
+def generate_card (person):
+    card = {
+        "type": "AdaptiveCard",
+        "body": [
+            {
+                "type": "ColumnSet",
+                "columns": [
+                    {
+                        "type": "Column",
+                        "items": [
+                            {
+                                "type": "Image",
+                                "style": "Person",
+                                "url": people["Photo_URL"][person],
+                                "size": "Medium",
+                                "height": "50px"
+                            }
+                        ],
+                        "width": "auto"
+                    },
+                    {
+                        "type": "Column",
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "text": "Welcome",
+                                "weight": "Lighter",
+                                "color": "Accent"
+                            },
+                            {
+                                "type": "TextBlock",
+                                "weight": "Bolder",
+                                "text": person,
+                                "wrap": True,
+                                "color": "Light",
+                                "size": "Large",
+                                "spacing": "Small"
+                            }
+                        ],
+                        "width": "stretch"
+                    }
+                ]
+            },
+            {
+                "type": "ColumnSet",
+                "columns": [
+                    {
+                        "type": "Column",
+                        "width": 35,
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "text": "Date:",
+                                "color": "Light"
+                            },
+                            {
+                                "type": "TextBlock",
+                                "text": "Hour:",
+                                "weight": "Lighter",
+                                "color": "Light",
+                                "spacing": "Small"
+                            },
+                            {
+                                "type": "TextBlock",
+                                "text": "Location:",
+                                "weight": "Lighter",
+                                "color": "Light",
+                                "spacing": "Small"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Column",
+                        "width": 65,
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "text": time.strftime('%b %d, %Y'),
+                                "color": "Light"
+                            },
+                            {
+                                "type": "TextBlock",
+                                "text": time.strftime('%H:%M %p'),
+                                "color": "Light",
+                                "weight": "Lighter",
+                                "spacing": "Small"
+                            },
+                            {
+                                "type": "TextBlock",
+                                "text": LOCATION,
+                                "weight": "Lighter",
+                                "color": "Light",
+                                "spacing": "Small"
+                            }
+                        ]
+                    }
+                ],
+                "spacing": "Padding",
+                "horizontalAlignment": "Center"
+            },
+            {
+                "type": "TextBlock",
+                "text": "We are happy to have you back in the office! Please keep your distance and wear a mask during your stay in the office. Have a nice day!",
+                "wrap": True
+            }
+        ],
+        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+        "version": "1.2"
+    }
+    return card
 
 def get_rtspurl(cam_serial):
     """
@@ -36,20 +146,32 @@ def get_rtspurl(cam_serial):
     except Exception as e:
         return print(f"Error when getting image URL: {e}")
 
-def send_webex_message(msg, photo, use_mask=False):
+def send_webex_message(person, photo, use_mask=False):
     if use_mask:
-        msg = msg + " 'd just arrived! That person is using a mask."
+        msg = person + " 'd just arrived! That person is using a mask."
     else:
-        msg = msg + " 'd just arrived! That person isn't using a mask."
+        msg = person + " 'd just arrived! That person isn't using a mask."
 
-    message = MultipartEncoder({'roomId': roomId,
+    message_photo = MultipartEncoder({'roomId': roomId,#people["RoomID"][person],
                                 "markdown": msg,
                                 'files': (photo, open(photo, 'rb'),
-                                          'image/png')})
-
-    response_webex = requests.post(url_webex, data=message,
+                                'image/png')})
+    message_card = {
+        "roomId": roomId,
+        "markdown": msg,
+        "attachments": [
+            {
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content":generate_card(person) }
+                    ]
+                }
+    response_webex = requests.post(url_webex, data=message_photo,
                                    headers={'Authorization': "Bearer " + WEBEX_ACCESS_TOKEN,
-                                            'Content-Type': message.content_type})
+                                            'Content-Type': message_photo.content_type})
+    print(response_webex.text)
+    response_webex = requests.post(url_webex,  data=json.dumps(message_card),
+                                   headers={'Authorization': "Bearer " + WEBEX_ACCESS_TOKEN,
+                                            'Content-Type': 'application/json'})
     print(response_webex.text)
 
 
@@ -79,7 +201,6 @@ if __name__ == "__main__":
         result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = faceCascade.detectMultiScale(gray, 1.1, 4)
-
         # Resize frame of video to 1/4 size for faster face recognition processing
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
 
@@ -132,16 +253,19 @@ if __name__ == "__main__":
             cv2.putText(frame, name, (left + 6, top - 6), font, 1.0, (255, 255, 255), 1, cv2.LINE_4, False)
 
             use_mask = False
-            if name != "Unknown":
-                if "_m" in name:
-                    use_mask = True
-                    name = name.replace('_m', '')
 
-                if name not in visitors:
+            if "_m" in name:
+                use_mask = True
+                name = name.replace('_m', '')
+            if "_a" in name:
+                name = name.replace('_a', '')
+
+            if name not in visitors:
+                if name != "Unknown":
                     visitors.append(name)
-                    temp = 'Visitors/' + name + '_' + time.strftime('%H_%M_%S_%m%d%Y') + '.png'
-                    cv2.imwrite(temp, frame)
-                    send_webex_message(name, temp, use_mask)
+                temp = 'Visitors/' + name + '_' + time.strftime('%H_%M_%S_%m%d%Y') + '.png'
+                cv2.imwrite(temp, frame)
+                send_webex_message(name, temp, use_mask)
 
         # Display the resulting image
         cv2.imshow('Video', frame)
