@@ -3,6 +3,8 @@ from deepface import DeepFace
 import requests
 from skimage import io
 import time
+import numpy as np
+import urllib
 
 faceCascade=cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 meraki_api_key = "0d7a8b4276fb04606fe0659a37e52dbba345e805"
@@ -31,7 +33,14 @@ def snapshot():
     response = requests.request('POST', url, headers=headers, data = payload)
     snapshot_url=(response.json())['url']
     return snapshot_url
-
+def url_to_image(url):
+	# download the image, convert it to a NumPy array, and then read
+	# it into OpenCV format
+	resp = urllib.urlopen(url)
+	image = np.asarray(bytearray(resp.read()), dtype="uint8")
+	image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+	# return the image
+	return image
 if __name__ == "__main__":
     # Get a reference to webcam #0 (the default one)
     #video_capture = cv2.VideoCapture(get_rtspurl(cam_serial))
@@ -40,7 +49,8 @@ if __name__ == "__main__":
     while True:
         #ret, frame = video_capture.read()
         time.sleep(10)
-        frame=io.imread(snapshot())
+        #frame=io.imread(snapshot())
+        frame=url_to_image(snapshot())
         result=DeepFace.analyze(frame,actions=['emotion'],enforce_detection=False)
 
         gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
