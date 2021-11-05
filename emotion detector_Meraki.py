@@ -1,18 +1,22 @@
 import cv2
 from deepface import DeepFace
 import requests
+from skimage import io
+import time
 
 faceCascade=cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
-def get_rtspurl(cam_serial):
-    """
-    Get RTSP URL from camera
-    """
-    headers = {
+meraki_api_key = "0d7a8b4276fb04606fe0659a37e52dbba345e805"
+cam_serial = "Q2FV-NX7G-MNB2"
+headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "X-Cisco-Meraki-API-Key": meraki_api_key
     }
+def get_rtspurl(cam_serial):
+    """
+    Get RTSP URL from camera
+    """
+
 
     try:
         r_rtspurl = requests.request('GET', f"https://api.meraki.com/api/v1/devices/{cam_serial}/camera/video/settings", headers=headers)
@@ -21,16 +25,22 @@ def get_rtspurl(cam_serial):
     except Exception as e:
         return print(f"Error when getting image URL: {e}")
 
-meraki_api_key = "0d7a8b4276fb04606fe0659a37e52dbba345e805"
-cam_serial = "Q2FV-NX7G-MNB2"
+def snapshot():
+    url = "https://api.meraki.com/api/v1/devices/Q2FV-NX7G-MNB2/camera/generateSnapshot"
+    payload = '''{ "fullframe": true }'''
+    response = requests.request('POST', url, headers=headers, data = payload)
+    snapshot_url=(response.json())['url']
+    return snapshot_url
 
 if __name__ == "__main__":
     # Get a reference to webcam #0 (the default one)
-    video_capture = cv2.VideoCapture(get_rtspurl(cam_serial))
-    process_this_frame = True
+    #video_capture = cv2.VideoCapture(get_rtspurl(cam_serial))
+    #process_this_frame = True
 
     while True:
-        ret, frame = video_capture.read()
+        #ret, frame = video_capture.read()
+        time.sleep(10)
+        frame=io.imread(snapshot())
         result=DeepFace.analyze(frame,actions=['emotion'],enforce_detection=False)
 
         gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
@@ -43,11 +53,11 @@ if __name__ == "__main__":
 
         cv2.putText(frame,result['dominant_emotion'],(50,50),font,3,(0,0,255),2,cv2.LINE_4)
 
-
-        cv2.imshow('Video', frame)
+        #cv2.imshow('Video', frame)
+        cv2.imshow('Snapshot', frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    video_capture.release()
+    #video_capture.release()
     cv2.destroyAllWindows()
