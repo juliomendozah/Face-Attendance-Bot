@@ -7,8 +7,8 @@ import numpy as np
 import urllib
 
 faceCascade=cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-meraki_api_key = "0d7a8b4276fb04606fe0659a37e52dbba345e805"
-cam_serial = "Q2FV-NX7G-MNB2"
+meraki_api_key = #Enter your Meraki API Key
+cam_serial = #Enter your Serial Number of your Meraki Camera
 headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
