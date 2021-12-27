@@ -16,9 +16,8 @@ from deepface import DeepFace
 faceCascade=cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 url_webex = "https://webexapis.com/v1/messages"
-WEBEX_ACCESS_TOKEN = "YWIyMmExZjgtNTYxYi00Yzk4LTljYmUtODA0MjYzNWQ0N2U4MzkyY2M0NzAtMjU1_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
-# roomId="Y2lzY29zcGFyazovL3VzL1JPT00vNGZmMGQwMDAtZWJmYy0xMWViLWI0OWUtOGRhMjlkNWZiNDJi"#Group Space
-roomId = "Y2lzY29zcGFyazovL3VzL1JPT00vMWZhMTI1MTAtMjUzZC0xMWVjLTk1YWEtMDlmNDQwMjE3Zjhi"  # Direct Space
+WEBEX_ACCESS_TOKEN = # Enter your Webex Bot Access Token
+roomId =   # Enter the Room ID of the Monitoring Space
 LOCATION ="Lima"
 people=pd.read_csv('People.csv',index_col="Name")
 
